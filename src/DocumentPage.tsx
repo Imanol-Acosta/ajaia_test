@@ -66,10 +66,49 @@ function isolateSelectedBlocks(tr: Transaction) {
 }
 
 type FormattingChain = ReturnType<Editor['chain']>
+type ListType = 'bulletList' | 'orderedList'
 
-function applyBlockFormat(editor: Editor, format: (chain: FormattingChain) => FormattingChain) {
+function splitSelectedListLines(tr: Transaction) {
+  const { doc, selection } = tr
+  if (selection.empty) return false
+
+  const { from, to } = selection
+  const { hardBreak, listItem, paragraph } = doc.type.schema.nodes
+  const splits: { position: number; depth: number; breakSize: number }[] = []
+  doc.nodesBetween(from, to, (node, position, parent, index) => {
+    if (node.type === hardBreak && from < position && position + node.nodeSize < to) {
+      const inListItem = doc.resolve(position).node(-1).type === listItem
+      splits.push({ position, depth: inListItem ? 2 : 1, breakSize: node.nodeSize })
+    }
+    if (node.type === paragraph && parent?.type === listItem && index > 0 && from < position && position + 1 < to) {
+      splits.push({ position, depth: 1, breakSize: 0 })
+    }
+  })
+
+  const firstStep = tr.steps.length
+  // Splitting from right to left keeps each earlier position stable.
+  for (const { position, depth, breakSize } of splits.reverse()) {
+    if (!canSplit(tr.doc, position, depth)) continue
+    const splitStep = tr.steps.length
+    tr.split(position, depth)
+    if (breakSize) {
+      const breakPosition = tr.mapping.slice(splitStep).map(position, 1)
+      tr.delete(breakPosition, breakPosition + breakSize)
+    }
+  }
+  return tr.steps.length > firstStep
+}
+
+function applyBlockFormat(editor: Editor, format: (chain: FormattingChain) => FormattingChain, listType?: ListType) {
+  const alreadyList = listType !== undefined && editor.isActive(listType)
   editor.commands.command(({ tr, chain }) => {
-    const applied = isolateSelectedBlocks(tr) && format(chain().focus()).run()
+    let applied = isolateSelectedBlocks(tr)
+    if (applied) {
+      const splitLines = listType !== undefined && splitSelectedListLines(tr)
+      const focused = chain().focus()
+      // A repeated click repairs multiline items before it can turn their list off.
+      applied = (splitLines && alreadyList ? focused : format(focused)).run()
+    }
     // Keep splitting and formatting atomic so an unsupported command leaves the text intact.
     if (!applied) tr.setMeta('preventDispatch', true)
     return applied
@@ -95,8 +134,8 @@ function FormatBar({ editor }: { editor: Editor }) {
     { name: 'Underline', icon: Underline, active: formats.underline, run: () => editor.chain().focus().toggleUnderline().run() },
     { name: 'Heading 1', icon: Heading1, active: formats.h1, run: () => applyBlockFormat(editor, (chain) => chain.toggleHeading({ level: 1 })) },
     { name: 'Heading 2', icon: Heading2, active: formats.h2, run: () => applyBlockFormat(editor, (chain) => chain.toggleHeading({ level: 2 })) },
-    { name: 'Bulleted list', icon: List, active: formats.bullets, run: () => applyBlockFormat(editor, (chain) => chain.toggleBulletList()) },
-    { name: 'Numbered list', icon: ListOrdered, active: formats.numbers, run: () => applyBlockFormat(editor, (chain) => chain.toggleOrderedList()) },
+    { name: 'Bulleted list', icon: List, active: formats.bullets, run: () => applyBlockFormat(editor, (chain) => chain.toggleBulletList(), 'bulletList') },
+    { name: 'Numbered list', icon: ListOrdered, active: formats.numbers, run: () => applyBlockFormat(editor, (chain) => chain.toggleOrderedList(), 'orderedList') },
   ]
   return (
     <div className="format-bar" role="group" aria-label="Text formatting">

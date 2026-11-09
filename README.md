@@ -29,13 +29,15 @@ Use the same two demo accounts for the local app. To run against a separate data
 
 ## Review the flow
 
-1. Sign in as Riley. Choose **New document**, rename the draft, add a heading, bold, italic, underline, and a list, then select **Save**. Reload and reopen the document to see the saved title and formatting.
+1. Sign in as Riley. Create a document named **PC Parts** and type `Build notes CPU and motherboard`. Select only `CPU and motherboard` and apply **Heading 1**. The selected phrase becomes a heading while `Build notes` stays a paragraph. Add a list and some bold or underlined text, select **Save**, then reload to see the saved formatting.
 2. As Riley, select **Import .txt** from the workspace. Use a UTF-8 `.txt` file up to **64 KiB**. The filename becomes the initial title, and the text opens as a new editable document.
 3. Copy the document URL. In a separate browser profile or incognito window, sign in as Morgan. The URL should show **Document unavailable** before Riley shares it.
 4. As Riley, open **Share**, select Morgan, choose **Viewer**, and select **Grant access**. As Morgan, retry the direct URL and check that the document opens as **Read only**.
 5. As Riley, change Morgan's access to **Editor** and select **Save access**. As Morgan, reload, edit and save the document, then reload as Riley to see the changes. Only Riley can manage access.
 6. Optional manual concurrency check. Open the same document as Riley and Morgan while Morgan has Editor access. Save in one session and then try saving from the older session. The older draft should stay visible and the save should report a conflict.
 7. With a disposable document, use the trash button under **My documents**. Cancel once, then confirm. The document should disappear from both accounts after refresh, and its direct URL should show **Document unavailable**.
+
+To check numbering with soft line breaks, type `CPU`, `Motherboard`, `RAM`, and `Graphics card` on separate lines using **Shift+Enter**. Select the four lines and click **Numbered list**. Each line should receive its own number. You can use the same action on a selected item that already contains several lines.
 
 ## Automated test and build
 
