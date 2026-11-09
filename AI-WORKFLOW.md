@@ -1,0 +1,7 @@
+# AI-native workflow
+
+I used **Codex** to compare framework options against official documentation and draft the React editor, Supabase migrations, and project docs. The biggest time savings came from integrating Tiptap, implementing the document and sharing flows, and iterating on database access policies. I used **ImageGen** to produce the Folio icon and favicon.
+
+I dropped the proposed Docker and pgTAP workflow to keep the exercise focused on the hosted demo. After reviewing the sharing UI, I replaced the role dropdown with visible Viewer and Editor choices so both permissions could be compared at a glance. I also asked for a quieter delete control and a custom confirmation that names the document and explains the effect on shared access. The first generated icon had uneven transparency, so I used a second version with a solid background.
+
+I reviewed the UI visually and ran functional checks in the browser. Codex confirmed the target project before applying migrations and ran the TypeScript check and Vite production build. The repo includes a Vitest case that checks the structure and literal text produced by the importer. The README records the two-account flow for reproducing the access and persistence checks.
