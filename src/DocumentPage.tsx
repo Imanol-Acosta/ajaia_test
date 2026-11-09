@@ -4,6 +4,9 @@ import { Link, useBeforeUnload, useBlocker, useOutletContext, useParams } from '
 import type { Session } from '@supabase/supabase-js'
 import { EditorContent, useEditor, useEditorState } from '@tiptap/react'
 import type { Editor } from '@tiptap/react'
+import { Selection, TextSelection } from '@tiptap/pm/state'
+import type { Transaction } from '@tiptap/pm/state'
+import { canSplit } from '@tiptap/pm/transform'
 import StarterKit from '@tiptap/starter-kit'
 import { ArrowLeft, Bold, Check, Eye, Heading1, Heading2, Italic, Link2, List, ListOrdered, PencilLine, Underline, UserRoundPlus, X } from 'lucide-react'
 import { Brand } from './Brand'
@@ -29,6 +32,50 @@ const accessOptions = [
   { value: 'editor', label: 'Editor', description: 'Read, rename, and edit.' },
 ] as const
 
+function isolateSelectedBlocks(tr: Transaction) {
+  const { selection, doc } = tr
+  if (!(selection instanceof TextSelection) || selection.empty) return true
+
+  const { $from, $to } = selection
+  // A selection ending at the next block's first position contains none of its text.
+  const from = $from.depth === 1 && $from.parentOffset === $from.parent.content.size
+    ? Selection.findFrom(doc.resolve($from.after()), 1, true)?.from ?? selection.from
+    : selection.from
+  const to = $to.depth === 1 && $to.parentOffset === 0
+    ? Selection.findFrom(doc.resolve($to.before()), -1, true)?.to ?? selection.to
+    : selection.to
+  if (from >= to) return false
+
+  const firstStep = tr.steps.length
+  // Split the end first so the start position stays valid, even within one block.
+  for (const position of [to, from]) {
+    const $position = tr.doc.resolve(position)
+    if ($position.depth !== 1 || !$position.parent.isTextblock
+      || $position.parentOffset === 0 || $position.parentOffset === $position.parent.content.size) continue
+    if (!canSplit(tr.doc, position)) return false
+    tr.split(position)
+  }
+
+  if (tr.steps.length === firstStep && from === selection.from && to === selection.to) return true
+  const mapping = tr.mapping.slice(firstStep)
+  const start = mapping.map(from, 1)
+  const end = mapping.map(to, -1)
+  const backwards = selection.anchor > selection.head
+  tr.setSelection(TextSelection.create(tr.doc, backwards ? end : start, backwards ? start : end))
+  return true
+}
+
+type FormattingChain = ReturnType<Editor['chain']>
+
+function applyBlockFormat(editor: Editor, format: (chain: FormattingChain) => FormattingChain) {
+  editor.commands.command(({ tr, chain }) => {
+    const applied = isolateSelectedBlocks(tr) && format(chain().focus()).run()
+    // Keep splitting and formatting atomic so an unsupported command leaves the text intact.
+    if (!applied) tr.setMeta('preventDispatch', true)
+    return applied
+  })
+}
+
 function FormatBar({ editor }: { editor: Editor }) {
   const formats = useEditorState({
     editor,
@@ -46,10 +93,10 @@ function FormatBar({ editor }: { editor: Editor }) {
     { name: 'Bold', icon: Bold, active: formats.bold, run: () => editor.chain().focus().toggleBold().run() },
     { name: 'Italic', icon: Italic, active: formats.italic, run: () => editor.chain().focus().toggleItalic().run() },
     { name: 'Underline', icon: Underline, active: formats.underline, run: () => editor.chain().focus().toggleUnderline().run() },
-    { name: 'Heading 1', icon: Heading1, active: formats.h1, run: () => editor.chain().focus().toggleHeading({ level: 1 }).run() },
-    { name: 'Heading 2', icon: Heading2, active: formats.h2, run: () => editor.chain().focus().toggleHeading({ level: 2 }).run() },
-    { name: 'Bulleted list', icon: List, active: formats.bullets, run: () => editor.chain().focus().toggleBulletList().run() },
-    { name: 'Numbered list', icon: ListOrdered, active: formats.numbers, run: () => editor.chain().focus().toggleOrderedList().run() },
+    { name: 'Heading 1', icon: Heading1, active: formats.h1, run: () => applyBlockFormat(editor, (chain) => chain.toggleHeading({ level: 1 })) },
+    { name: 'Heading 2', icon: Heading2, active: formats.h2, run: () => applyBlockFormat(editor, (chain) => chain.toggleHeading({ level: 2 })) },
+    { name: 'Bulleted list', icon: List, active: formats.bullets, run: () => applyBlockFormat(editor, (chain) => chain.toggleBulletList()) },
+    { name: 'Numbered list', icon: ListOrdered, active: formats.numbers, run: () => applyBlockFormat(editor, (chain) => chain.toggleOrderedList()) },
   ]
   return (
     <div className="format-bar" role="group" aria-label="Text formatting">

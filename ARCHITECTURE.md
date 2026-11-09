@@ -1,6 +1,6 @@
 # Architecture
 
-Folio uses React and Tiptap in a static Vite build served by Cloudflare Pages. Supabase handles authentication, persistence, and authorization. I prioritized a complete flow from opening a draft to saving and sharing it. That kept the frontend deployment simple and put access enforcement in the database, where it also applies to requests made directly to the API.
+Folio uses React and Tiptap in a static Vite build served by Cloudflare Workers. Supabase handles authentication, persistence, and authorization. I prioritized a complete flow from opening a draft to saving and sharing it. That kept the frontend deployment simple and put access enforcement in the database, where it also applies to requests made directly to the API.
 
 ## Documents and saving
 

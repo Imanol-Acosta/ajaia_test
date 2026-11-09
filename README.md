@@ -2,9 +2,11 @@
 
 Folio is a small document workspace built for the Ajaia product engineering exercise. Create a draft, format and save it, or import a plain-text file. Share a saved document with another demo account as a Viewer or Editor.
 
+[Open the live Folio demo](https://ajaia-test.ilacosta05.workers.dev/)
+
 ## Run locally
 
-Extract `Folio-source.zip`, open a terminal in the extracted folder, and use Node.js 22.12 or newer with npm. To try the hosted demo first, open the link in [SUBMISSION.md](SUBMISSION.md). The demo credentials are in `DEMO-ACCOUNTS.md`.
+Extract `Folio-source.zip`, open a terminal in the extracted folder, and use Node.js 22.12 or newer with npm. The demo credentials are in `DEMO-ACCOUNTS.md` in the Drive folder.
 
 ```sh
 npm ci
@@ -59,8 +61,8 @@ values
   ('MORGAN_AUTH_USER_UUID', 'Morgan');
 ```
 
-## Deploy
+## Deployment
 
-Run `npm run build` with the target project's public environment variables set, then upload `dist` to a Cloudflare Pages Direct Upload project. With Wrangler, run `npx wrangler login`, create the Pages project once with `npx wrangler pages project create PROJECT_NAME --production-branch main`, and deploy with `npx wrangler pages deploy dist --project-name PROJECT_NAME --branch main`. Pages serves the SPA for direct document URLs.
+The live demo is hosted on Cloudflare Workers. In Workers Builds, set both `VITE_SUPABASE_*` variables in the build environment for the production branch and use `npm run build` as the build command. Deploy `dist` as static assets. Set `assets.not_found_handling` to `single-page-application` so direct document links load the React app. Start a fresh build after changing the variables. [Workers Builds configuration](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/) · [SPA routing on Workers](https://developers.cloudflare.com/workers/static-assets/routing/single-page-application/)
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) and [AI-WORKFLOW.md](AI-WORKFLOW.md) for tradeoffs and review notes.

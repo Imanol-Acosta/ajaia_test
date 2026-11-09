@@ -1,6 +1,6 @@
 # Ajaia submission — Folio
 
-**Live app on Cloudflare Pages** — `PASTE_LIVE_PRODUCT_URL`
+**Live app on Cloudflare Workers** — [Open Folio](https://ajaia-test.ilacosta05.workers.dev/)
 
 Use the credentials in `DEMO-ACCOUNTS.md`. Sign in as Riley to create, import, and share a document. Open a second browser session as Morgan to try both Viewer and Editor access. The step-by-step review flow is in `README.md`.
 
@@ -14,7 +14,8 @@ Use the credentials in `DEMO-ACCOUNTS.md`. Sign in as Riley to create, import, a
 | AI tools, decisions, and verification | `AI-WORKFLOW.md` |
 | Submission index and live product URL | `SUBMISSION.md` |
 | Riley and Morgan demo credentials | `DEMO-ACCOUNTS.md` |
-| Link to the 3–5 minute walkthrough | `WALKTHROUGH.txt` |
+
+**Walkthrough.** The video link is pending. It will be available in `WALKTHROUGH.txt`.
 
 ## Scope
 
