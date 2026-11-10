@@ -1,5 +1,7 @@
 # Ajaia submission — Folio
 
+**Submission folder** — [Open the Google Drive folder](https://drive.google.com/drive/folders/1FNe2ahY11S5xg3pF4EApOPusqd3PRS-r)
+
 **Live app on Cloudflare Workers** — [Open Folio](https://ajaia-test.ilacosta05.workers.dev/)
 
 **Walkthrough** — [Watch the video](https://youtu.be/8lEzuzBK7Yc?si=kRYVAjucJUwE25Y_)
